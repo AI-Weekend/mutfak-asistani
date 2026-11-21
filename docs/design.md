@@ -6,15 +6,12 @@ node ↔ Langflow blok eşlemesini, araçları, Store'u, ingestion'ı, gözlemle
 ## 1. Grafik
 
 ```
-                        ┌────────────── uzun girdi ──────────────┐
-                        ▼                                         │
-START ──► guard ──(ok)──► router ──┬─ tarif          ──► END     │
-            │                      ├─ alisveris      ──► END     │
-            └─ (>1000 karakter) ───┤  (agent)                    │
-               kibar ret ──► END ◄─┤                             │
-                                   ├─ beslenme       ──► END ◄───┘
-                                   ├─ haftalik_menu  ──► END
-                                   └─ konu_disi      ──► END   (kibar ret)
+START ──► guard ──(≤1000 karakter)──► router ──┬─► tarif          (RAG + hafıza + CoT + alerjen kontrolü) ──► END
+            │                                  ├─► alisveris      (ajan: web_search, calculator, read/append/edit_list) ──► END
+            │                                  ├─► beslenme       (ajan: calculator, web_search) ──► END
+            │                                  ├─► haftalik_menu  (ajan: tarif_ara, alerjen_kontrol, menu_kurallarini_dogrula, calculator) ──► END
+            │                                  └─► konu_disi      (kibar ret) ──► END
+            └──(>1000 karakter: kibar ret, model çağrısı yok)──► END
 ```
 
 Mermaid çıktısı: `uv run python -c "from mutfak_asistani.graph import graph; print(graph.get_graph().draw_mermaid())"`.
