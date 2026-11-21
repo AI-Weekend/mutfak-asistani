@@ -134,7 +134,8 @@ eşzamanlı *ayrı run'ları* için Store öğesine sürüm alanı (optimistic c
 | Tavily `max_results ≤ 3`, `basic` | **Uygulandı** | `web_search` |
 | Model timeout 60 sn, 2 yeniden deneme | **Uygulandı** | `get_chat_model` |
 | Hesap makinesinde `eval` yok, üs sınırı | **Uygulandı** | `calculator` |
-| Rate limit (kullanıcı/IP başına istek) | **Dokümante** | Ters proxy / API gateway'de (örn. Cloudflare, nginx `limit_req`); LangSmith Deployment önünde |
+| Rate limit (IP başına istek/run) | **Uygulandı (en iyi çaba)** | `chat-ui/route.ts`: saatte 30 run, dakikada 120 istek, bellek içi. Ek olarak Vercel Firewall kuralı önerilir |
+| Herkese açık proxy: uç nokta izin listesi, asistan kilidi, `config` atma, ziyaretçi başına thread (`metadata.owner` + çerez) | **Uygulandı** | `chat-ui/guard.ts` (+ `guard.test.ts`) |
 | Kimlik doğrulama / yetkilendirme | **Dokümante** | Varsayılan: kimlik yok, liste thread başına (bölüm 5). Kullanıcı başına liste için LangSmith custom auth (`auth.py`, `user:<id>` kimliği) ya da gateway |
 | Prompt-injection sertleştirme (kullanıcı metni "kurallar"ı geçersiz kılma) | **Kısmen** | Alerjen kuralı deterministik koddan prompta girer; ayrıca router "talimat değiştirme"yi `konu_disi` sayar. Tam koruma için çıktı doğrulayıcı (post-check) eklenebilir |
 | Maliyet bütçesi / günlük token tavanı | **Dokümante** | Sağlayıcı konsolunda hard limit + LangSmith maliyet alarmı |

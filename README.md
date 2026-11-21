@@ -112,8 +112,32 @@ Offline (golden, merge öncesi) ve online (deploy sonrası trace örnekleme) dö
 ## Korumalar
 
 Girdi uzunluk sınırı (1000 karakter), konu dışı ret, `max_tokens`, ajan `recursion_limit`, Tavily ≤3 sonuç uygulandı.
-Rate limit ve kimlik doğrulama proxy/Deployment katmanında — bkz. `docs/design.md` §8.
+Herkese açık sayfa için uç nokta izin listesi, ziyaretçi başına thread ayrımı ve IP hız sınırı `chat-ui/` proxy'sinde — bkz. `chat-ui/README.md` ve `docs/design.md` §8.
 
 ## Deploy
 
-TODO — LangSmith Deployment / Agent Chat UI adımları eklenecek.
+İki parça: **LangSmith Deployment** (Agent Server, grafiği çalıştırır) + **Agent Chat UI** (Vercel'de herkese açık sohbet sayfası,
+korumalı proxy ile — bkz. [`chat-ui/README.md`](chat-ui/README.md)). Fiyatlar 21 Kasım 2026'da langchain.com/pricing'den okundu.
+
+1. **LangSmith hesabı** aç (smith.langchain.com). Deployment için **Plus** planı gerekir: koltuk başı **39 $/ay**,
+   **1 küçük serverless Agent Server ücretsiz** dahil; ek sunucular kaynak kullanımına göre ücretlenir. Developer (ücretsiz) planda deployment yok.
+2. **API anahtarı** oluştur (Settings → API Keys) → bu anahtar yalnızca Vercel'e ve yerel `.env`'e girer.
+3. **GitHub bağlantısı:** Agent Servers → **+ Agent Server** → Source: **GitHub repository** → `hosted-langserve` GitHub uygulamasını
+   `AI-Weekend` organizasyonunda yetkilendir (org sahibi/admin gerekir; "Only select repositories" → `mutfak-asistani`).
+4. **Sunucuyu oluştur:**
+   | Alan | Değer |
+   | --- | --- |
+   | Repository | `AI-Weekend/mutfak-asistani` |
+   | Name | `mutfak-asistani` |
+   | Git Ref (Branch or Tag) | `main` |
+   | LangGraph API config file | `langgraph.json` |
+   | Automatically update Agent Server on push to branch | açık |
+   | Agent Server type | **Serverless** (ücretsiz küçük sunucu; soğuk başlangıç olabilir) |
+   | Shareable through Studio | kapalı |
+   | Environment variables / secrets | `XAI_API_KEY`, `OPENAI_API_KEY`, `TAVILY_API_KEY`, `LANGSMITH_PROJECT=mutfak-asistani`, `LANGSMITH_TRACING=true` |
+5. **Submit** → Agent Server detayındaki **URL**'yi kopyala (örn. `https://mutfak-asistani-….us.langgraph.app`).
+   Deployment isteklerini `X-Api-Key: <LangSmith anahtarı>` ile doğrular; anahtarı tarayıcıya koyma.
+6. **Sohbet sayfası:** `chat-ui/README.md`'deki adımlar (agent-chat-ui fork + korumalı `route.ts` + Vercel ortam değişkenleri).
+7. **Harcama limitleri:** xAI, OpenAI ve Tavily konsollarında aylık limit; etkinlik sonrası anahtarı iptal et.
+
+Alternatif (CLI, beta): `uv tool install langgraph-cli` → `.env`'e `LANGSMITH_API_KEY` → `langgraph deploy --name mutfak-asistani`.
